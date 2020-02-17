@@ -1,0 +1,15 @@
+language: rust
+rust:
+  - stable
+matrix:
+  fast_finish: true
+cache: cargo
+env:
+  global:
+    - SERVER: 127.0.0.1:3000
+before_script:
+  - sudo apt-get update
+script:
+  - cargo build --verbose --all
+  - SERVER=127.0.0.1:3000
+  - cargo test --verbose --all
