@@ -1,6 +1,6 @@
 [package]
-name = "rust_actix_framework"
-version = "0.2.0"
+name = "rust_actix_example"
+version = "0.1.0"
 authors = ["David DiMaria <info@collectivesessions.com>"]
 edition = "2018"
 

@@ -1,8 +1,8 @@
-# Rust/Actix Framework
+# Rust/Actix Example
 
-[![Build Status](https://travis-ci.com/ddimaria/rust-actix-framework.svg?branch=master)](https://travis-ci.com/ddimaria/rust-actix-framework)
+[![Build Status](https://travis-ci.com/ddimaria/rust-actix-example.svg?branch=master)](https://travis-ci.com/ddimaria/rust-actix-example)
 
-A web framework built upon Actix Web using the Rust language.
+An Actix 2.0 REST server using the Rust language.
 
 ## Motivation
 
@@ -55,8 +55,8 @@ other languages while attempting to maintain the performance benefits of Actix.
 Clone the repo and cd into the repo:
 
 ```shell
-git clone https://github.com/ddimaria/rust-actix-framework.git
-cd rust-actix-framework
+git clone https://github.com/ddimaria/rust-actix-example.git
+cd rust-actix-example
 ```
 
 Copy over the example .env file:
@@ -175,13 +175,13 @@ You can view the HTML output of the report at `target/cov/index.html`
 To build a Docker image of the application:
 
 ```shell
-docker build -t rust_actix_framework .
+docker build -t rust_actix_example .
 ```
 
 Once the image is built, you can run the container in port 3000:
 
 ```shell
-docker run -it --rm --env-file=.env.docker -p 3000:3000 --name rust_actix_framework rust_actix_framework
+docker run -it --rm --env-file=.env.docker -p 3000:3000 --name rust_actix_example rust_actix_example
 ```
 
 ## Public Static Files
