@@ -55,6 +55,7 @@ other languages while attempting to maintain the performance benefits of Actix.
 Clone the repo and cd into the repo:
 
 ```shell
+sudo apt install libsqlite3-dev
 git clone https://github.com/ddimaria/rust-actix-example.git
 cd rust-actix-example
 ```
