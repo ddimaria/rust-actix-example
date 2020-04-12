@@ -52,6 +52,12 @@ other languages while attempting to maintain the performance benefits of Actix.
 
 ## Installation
 
+Build/Runtime Dependency:
+
+```shell
+sudo apt install libsqlite3-dev
+```
+
 Clone the repo and cd into the repo:
 
 ```shell
