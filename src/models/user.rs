@@ -3,6 +3,8 @@ use crate::database::PoolType;
 use crate::errors::ApiError;
 use crate::handlers::user::{UserResponse, UsersResponse};
 use crate::schema::users;
+use rand::{thread_rng, Rng};
+use rand::distributions::Alphanumeric;
 use chrono::{NaiveDateTime, Utc};
 use diesel::prelude::*;
 use uuid::Uuid;
@@ -14,6 +16,7 @@ pub struct User {
     pub last_name: String,
     pub email: String,
     pub password: String,
+    pub salt: String,
     pub created_by: String,
     pub created_at: NaiveDateTime,
     pub updated_by: String,
@@ -78,15 +81,20 @@ pub fn find_by_auth(
     user_email: &str,
     user_password: &str,
 ) -> Result<UserResponse, ApiError> {
-    use crate::schema::users::dsl::{email, password, users};
+    use crate::schema::users::dsl::{email, users};
 
     let conn = pool.get()?;
     let user = users
         .filter(email.eq(user_email.to_string()))
-        .filter(password.eq(user_password.to_string()))
         .first::<User>(&conn)
         .map_err(|_| ApiError::Unauthorized("Invalid login".into()))?;
-    Ok(user.into())
+    let hashed = hash(user_password,&user.salt);
+    if hashed.eq(&user.password) {
+        Ok(user.into())
+    } else {
+        Err(ApiError::Unauthorized("Invalid login".into()))
+    }
+
 }
 
 /// Create a new user
@@ -123,12 +131,14 @@ pub fn delete(pool: &PoolType, user_id: Uuid) -> Result<(), ApiError> {
 
 impl From<NewUser> for User {
     fn from(user: NewUser) -> Self {
+        let salt = thread_rng().sample_iter(&Alphanumeric).take(32).collect::<String>();
         User {
             id: user.id,
             first_name: user.first_name,
             last_name: user.last_name,
             email: user.email,
-            password: hash(&user.password),
+            password: hash(&user.password,&salt),
+            salt: salt,
             created_by: user.created_by,
             created_at: Utc::now().naive_utc(),
             updated_by: user.updated_by,

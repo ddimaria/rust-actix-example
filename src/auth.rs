@@ -46,8 +46,9 @@ pub fn decode_jwt(token: &str) -> Result<PrivateClaim, ApiError> {
 ///
 /// Uses the argon2i algorithm.
 /// auth_salt is environment-configured.
-pub fn hash(password: &str) -> String {
-    argon2i_simple(&password, &CONFIG.auth_salt)
+pub fn hash(password: &str, salt: &String) -> String {
+    let masked = mask_str(&salt, &CONFIG.auth_salt);
+    argon2i_simple(&password, &masked)
         .iter()
         .map(|b| format!("{:02x}", b))
         .collect()
@@ -63,23 +64,46 @@ pub fn get_identity_service() -> IdentityService<CookieIdentityPolicy> {
     )
 }
 
+
+fn mask_str(str: &String, mask : &String) -> String{
+    let mut strb = str.clone().into_bytes();
+    let maskb = mask.clone().into_bytes();
+    let str_len = strb.len();
+    let mask_len = maskb.len();
+    let mut i = 0;
+    let mut m = 0;
+    while i < str_len{
+        if m >= mask_len {
+            m = 0;
+        }
+        strb[i] = (strb[i].wrapping_add(maskb[m])) % 128;
+        i += 1;
+        m+= 1;
+    }
+    return String::from_utf8(strb).unwrap();
+}
+
 #[cfg(test)]
 pub mod tests {
     use super::*;
+    use rand::{thread_rng, Rng};
+    use rand::distributions::Alphanumeric;
     static EMAIL: &str = "test@test.com";
 
     #[test]
     fn it_hashes_a_password() {
         let password = "password";
-        let hashed = hash(password);
+        let salt = thread_rng().sample_iter(&Alphanumeric).take(32).collect::<String>();
+        let hashed = hash(password, &salt);
         assert_ne!(password, hashed);
     }
 
     #[test]
     fn it_matches_2_hashed_passwords() {
         let password = "password";
-        let hashed = hash(password);
-        let hashed_again = hash(password);
+        let salt = thread_rng().sample_iter(&Alphanumeric).take(32).collect::<String>();
+        let hashed = hash(password, &salt);
+        let hashed_again = hash(password, &salt);
         assert_eq!(hashed, hashed_again);
     }
 
@@ -96,5 +120,14 @@ pub mod tests {
         let jwt = create_jwt(private_claim.clone()).unwrap();
         let decoded = decode_jwt(&jwt).unwrap();
         assert_eq!(private_claim, decoded);
+    }
+
+
+    #[test]
+    fn it_masks_a_string() {
+        let salt = "salt1salt2salt3".to_string();
+        let mask = "mask52632".to_string();
+        let masked = mask_str(&salt, &mask);
+        assert_ne!(masked, "".to_string());
     }
 }

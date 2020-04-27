@@ -5,6 +5,7 @@ table! {
         last_name -> Varchar,
         email -> Varchar,
         password -> Varchar,
+        salt -> Varchar,
         created_by -> Varchar,
         created_at -> Timestamp,
         updated_by -> Varchar,
