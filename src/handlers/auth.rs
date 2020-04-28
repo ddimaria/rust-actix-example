@@ -1,4 +1,4 @@
-use crate::auth::{create_jwt, hash, PrivateClaim};
+use crate::auth::{create_jwt, PrivateClaim};
 use crate::database::PoolType;
 use crate::errors::ApiError;
 use crate::handlers::user::UserResponse;
@@ -31,9 +31,8 @@ pub async fn login(
 ) -> Result<Json<UserResponse>, ApiError> {
     validate(&params)?;
 
-    // Validate that the email + hashed password matches
-    let hashed = hash(&params.password);
-    let user = block(move || find_by_auth(&pool, &params.email, &hashed)).await?;
+    // Validate that the email + password matches
+    let user = block(move || find_by_auth(&pool, &params.email, &params.password)).await?;
 
     // Create a JWT
     let private_claim = PrivateClaim::new(user.id, user.email.clone());
