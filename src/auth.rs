@@ -65,6 +65,7 @@ pub fn get_identity_service() -> IdentityService<CookieIdentityPolicy> {
 }
 
 
+/// Mask one string with another. Used for combining salts.
 fn mask_str(str: &String, mask : &String) -> String{
     let mut strb = str.clone().into_bytes();
     let maskb = mask.clone().into_bytes();
