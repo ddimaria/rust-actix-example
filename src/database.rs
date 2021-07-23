@@ -25,7 +25,7 @@ pub type MysqlPool = Pool<MysqlConnection>;
 pub type PostgresPool = Pool<PgConnection>;
 pub type SqlitePool = Pool<SqliteConnection>;
 
-#[cfg(feature = "cockraoch")]
+#[cfg(feature = "cockroach")]
 pub type PoolType = CockroachPool;
 
 #[cfg(feature = "mysql")]
