@@ -6,9 +6,10 @@ use crate::helpers::{respond_json, respond_ok};
 use crate::models::user::find_by_auth;
 use crate::validate::validate;
 use actix_identity::Identity;
-use actix_web::web::{block, Data, HttpResponse, Json};
+use actix_web::HttpResponse;
+use actix_web::web::{block, Data, Json};
 use serde::Serialize;
-use validator::Validate;
+
 
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct LoginRequest {
@@ -25,7 +26,7 @@ pub struct LoginRequest {
 /// Login a user
 /// Create and remember their JWT
 pub async fn login(
-    id: Identity,
+    _id: Identity,
     pool: Data<PoolType>,
     params: Json<LoginRequest>,
 ) -> Result<Json<UserResponse>, ApiError> {
@@ -33,21 +34,21 @@ pub async fn login(
 
     // Validate that the email + hashed password matches
     let hashed = hash(&params.password);
-    let user = block(move || find_by_auth(&pool, &params.email, &hashed)).await?;
+    let user = block(move || find_by_auth(&pool, &params.email, &hashed)).await??;
 
     // Create a JWT
     let private_claim = PrivateClaim::new(user.id, user.email.clone());
-    let jwt = create_jwt(private_claim)?;
+    let _jwt = create_jwt(private_claim)?;
 
     // Remember the token
-    id.remember(jwt);
-    respond_json(user.into())
+    // id.remember(jwt);
+    respond_json(user)
 }
 
 /// Logout a user
 /// Forget their user_id
 pub async fn logout(id: Identity) -> Result<HttpResponse, ApiError> {
-    id.forget();
+    id.logout();
     respond_ok()
 }
 
@@ -56,11 +57,11 @@ pub mod tests {
     use super::*;
     use crate::tests::helpers::tests::get_data_pool;
     use actix_identity::Identity;
-    use actix_web::{test, FromRequest};
+    use actix_web::{test, FromRequest, http::header::{self, HeaderValue}};
 
     async fn get_identity() -> Identity {
         let (request, mut payload) =
-            test::TestRequest::with_header("content-type", "application/json").to_http_parts();
+            test::TestRequest::default().insert_header((header::CONTENT_TYPE, HeaderValue::from_static("text/plain"))).to_http_parts();
         let identity = Option::<Identity>::from_request(&request, &mut payload)
             .await
             .unwrap()

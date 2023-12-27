@@ -1,5 +1,5 @@
 use crate::errors::ApiError;
-use actix_web::{body::Body, web::{HttpResponse, Json}};
+use actix_web::{web::Json, HttpResponse, body::BoxBody};
 use serde::Serialize;
 
 /// Helper function to reduce boilerplate of an OK/Json response
@@ -12,7 +12,7 @@ where
 
 /// Helper function to reduce boilerplate of an empty OK response
 pub fn respond_ok() -> Result<HttpResponse, ApiError> {
-    Ok(HttpResponse::Ok().body(Body::Empty))
+    Ok(HttpResponse::Ok().body(BoxBody::new("")))
 }
 
 #[cfg(test)]

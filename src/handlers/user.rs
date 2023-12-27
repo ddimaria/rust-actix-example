@@ -3,11 +3,12 @@ use crate::errors::ApiError;
 use crate::helpers::{respond_json, respond_ok};
 use crate::models::user::{create, delete, find, get_all, update, NewUser, UpdateUser, User};
 use crate::validate::validate;
-use actix_web::web::{block, Data, HttpResponse, Json, Path};
+use actix_web::{HttpResponse, web};
+use actix_web::web::{block, Data, Json, Path};
 use rayon::prelude::*;
 use serde::Serialize;
 use uuid::Uuid;
-use validator::Validate;
+
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct UserResponse {
@@ -67,13 +68,13 @@ pub async fn get_user(
     user_id: Path<Uuid>,
     pool: Data<PoolType>,
 ) -> Result<Json<UserResponse>, ApiError> {
-    let user = block(move || find(&pool, *user_id)).await?;
+    let user = block(move || find(&pool, *user_id)).await??;
     respond_json(user)
 }
 
 /// Get all users
 pub async fn get_users(pool: Data<PoolType>) -> Result<Json<UsersResponse>, ApiError> {
-    let users = block(move || get_all(&pool)).await?;
+    let users = block(move || get_all(&pool)).await??;
     respond_json(users)
 }
 
@@ -97,8 +98,8 @@ pub async fn create_user(
         updated_by: user_id.to_string(),
     }
     .into();
-    let user = block(move || create(&pool, &new_user)).await?;
-    respond_json(user.into())
+    let user = block(move || create(&pool, &new_user)).await??;
+    respond_json(user)
 }
 
 /// Update a user
@@ -118,8 +119,8 @@ pub async fn update_user(
         email: params.email.to_string(),
         updated_by: user_id.to_string(),
     };
-    let user = block(move || update(&pool, &update_user)).await?;
-    respond_json(user.into())
+    let user = web::block(move || update(&pool, &update_user)).await??;
+    respond_json(user)
 }
 
 /// Delete a user
@@ -127,7 +128,7 @@ pub async fn delete_user(
     user_id: Path<Uuid>,
     pool: Data<PoolType>,
 ) -> Result<HttpResponse, ApiError> {
-    block(move || delete(&pool, *user_id)).await?;
+    let _ = block(move || delete(&pool, *user_id)).await?;
     respond_ok()
 }
 

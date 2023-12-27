@@ -9,7 +9,7 @@ pub type Cache = Data<Addr<RedisActor>>;
 
 /// Retrieve an entry in redis
 #[allow(dead_code)]
-pub async fn get<'a>(redis: Cache, key: &'a str) -> Result<String, ApiError> {
+pub async fn get(redis: Cache, key: &str) -> Result<String, ApiError> {
     let command = resp_array!["GET", key];
     send(redis, command).await
 }
@@ -23,7 +23,7 @@ pub async fn set<'a>(redis: Cache, key: &'a str, value: &'a str) -> Result<Strin
 
 /// Delete an entry in redis
 #[allow(dead_code)]
-pub async fn delete<'a>(redis: Cache, key: &'a str) -> Result<String, ApiError> {
+pub async fn delete(redis: Cache, key: &str) -> Result<String, ApiError> {
     let command = resp_array!["DEL", key];
     send(redis, command).await
 }
@@ -31,7 +31,7 @@ pub async fn delete<'a>(redis: Cache, key: &'a str) -> Result<String, ApiError> 
 /// Send a command to the redis actor
 async fn send<'a>(redis: Cache, command: RespValue) -> Result<String, ApiError> {
     let error_message = format!("Could not send {:?} command to Redis", command);
-    let error = ApiError::CacheError(error_message.into());
+    let error = ApiError::CacheError(error_message);
     let response = redis.send(Command(command)).await.map_err(|_| error)?;
     match response {
         Ok(message) => Ok::<String, _>(FromResp::from_resp(message).unwrap_or("".into())),
@@ -44,7 +44,7 @@ pub fn add_cache(cfg: &mut ServiceConfig) {
     if !&CONFIG.redis_url.is_empty() {
         // Start a new supervisor with redis actor
         let cache = RedisActor::start(&CONFIG.redis_url);
-        cfg.data(cache);
+        cfg.app_data(cache);
     }
 }
 

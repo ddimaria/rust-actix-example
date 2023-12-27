@@ -1,12 +1,12 @@
 #[cfg(test)]
 pub mod tests {
-    use crate::auth::get_identity_service;
     use crate::cache::add_cache;
     use crate::config::CONFIG;
     use crate::database::{add_pool, init_pool, Pool};
     use crate::handlers::auth::LoginRequest;
     use crate::routes::routes;
     use crate::state::{new_state, AppState};
+    use actix_identity::IdentityMiddleware;
     use actix_web::dev::ServiceResponse;
     use actix_web::{test, web::Data, App};
     use diesel::mysql::MysqlConnection;
@@ -23,7 +23,7 @@ pub mod tests {
             App::new()
                 .configure(add_cache)
                 .app_data(app_state())
-                .wrap(get_identity_service())
+                .wrap(IdentityMiddleware::default())
                 .configure(add_pool)
                 .configure(routes),
         )
@@ -55,7 +55,7 @@ pub mod tests {
             App::new()
                 .configure(add_cache)
                 .app_data(app_state())
-                .wrap(get_identity_service())
+                .wrap(IdentityMiddleware::default())
                 .configure(add_pool)
                 .configure(routes),
         )
@@ -117,7 +117,7 @@ pub mod tests {
         };
         let mut app = test::init_service(
             App::new()
-                .wrap(get_identity_service())
+                .wrap(IdentityMiddleware::default())
                 .configure(add_pool)
                 .configure(routes),
         )

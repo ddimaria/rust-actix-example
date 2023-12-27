@@ -51,8 +51,8 @@ pub struct AuthUser {
 pub fn get_all(pool: &PoolType) -> Result<UsersResponse, ApiError> {
     use crate::schema::users::dsl::users;
 
-    let conn = pool.get()?;
-    let all_users = users.load(&conn)?;
+    let mut conn = pool.get()?;
+    let all_users = users.load(&mut conn)?;
 
     Ok(all_users.into())
 }
@@ -62,10 +62,10 @@ pub fn find(pool: &PoolType, user_id: Uuid) -> Result<UserResponse, ApiError> {
     use crate::schema::users::dsl::{id, users};
 
     let not_found = format!("User {} not found", user_id);
-    let conn = pool.get()?;
+    let mut conn = pool.get()?;
     let user = users
         .filter(id.eq(user_id.to_string()))
-        .first::<User>(&conn)
+        .first::<User>(&mut conn)
         .map_err(|_| ApiError::NotFound(not_found))?;
 
     Ok(user.into())
@@ -80,11 +80,11 @@ pub fn find_by_auth(
 ) -> Result<UserResponse, ApiError> {
     use crate::schema::users::dsl::{email, password, users};
 
-    let conn = pool.get()?;
+    let mut conn = pool.get()?;
     let user = users
         .filter(email.eq(user_email.to_string()))
         .filter(password.eq(user_password.to_string()))
-        .first::<User>(&conn)
+        .first::<User>(&mut conn)
         .map_err(|_| ApiError::Unauthorized("Invalid login".into()))?;
     Ok(user.into())
 }
@@ -93,8 +93,8 @@ pub fn find_by_auth(
 pub fn create(pool: &PoolType, new_user: &User) -> Result<UserResponse, ApiError> {
     use crate::schema::users::dsl::users;
 
-    let conn = pool.get()?;
-    diesel::insert_into(users).values(new_user).execute(&conn)?;
+    let mut conn = pool.get()?;
+    diesel::insert_into(users).values(new_user).execute(&mut conn)?;
     Ok(new_user.clone().into())
 }
 
@@ -102,22 +102,22 @@ pub fn create(pool: &PoolType, new_user: &User) -> Result<UserResponse, ApiError
 pub fn update(pool: &PoolType, update_user: &UpdateUser) -> Result<UserResponse, ApiError> {
     use crate::schema::users::dsl::{id, users};
 
-    let conn = pool.get()?;
+    let mut conn = pool.get()?;
     diesel::update(users)
         .filter(id.eq(update_user.id.clone()))
         .set(update_user)
-        .execute(&conn)?;
-    find(&pool, Uuid::parse_str(&update_user.id)?)
+        .execute(&mut conn)?;
+    find(pool, Uuid::parse_str(&update_user.id)?)
 }
 
 /// Delete a user
 pub fn delete(pool: &PoolType, user_id: Uuid) -> Result<(), ApiError> {
     use crate::schema::users::dsl::{id, users};
 
-    let conn = pool.get()?;
+    let mut conn = pool.get()?;
     diesel::delete(users)
         .filter(id.eq(user_id.to_string()))
-        .execute(&conn)?;
+        .execute(&mut conn)?;
     Ok(())
 }
 
