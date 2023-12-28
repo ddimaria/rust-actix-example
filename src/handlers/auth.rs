@@ -94,10 +94,6 @@ pub mod tests {
 
         let req = test::TestRequest::post()
             .uri("/logout")
-            .set_json(LoginRequest {
-                email: "satoshi@nakamotoinstitute.org".into(),
-                password: "123456".into(),
-            })
             .to_request();
 
         let resp = app.call(req).await.unwrap();

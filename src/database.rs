@@ -1,6 +1,6 @@
 //! Database-related functions
-use crate::config::{Config, CONFIG};
-use actix_web::web;
+use crate::config::Config;
+use actix_web::web::{self, Data};
 use diesel::{
     mysql::MysqlConnection,
     pg::PgConnection,
@@ -8,6 +8,7 @@ use diesel::{
     sqlite::SqliteConnection,
     Connection,
 };
+use log::info;
 
 #[derive(Clone, Deserialize, Debug, PartialEq)]
 #[serde(field_identifier, rename_all = "lowercase")]
@@ -71,11 +72,12 @@ where
 }
 
 pub fn add_pool(cfg: &mut web::ServiceConfig) {
+    info!("config database pool");
     let pool = InferPool::init_pool(CONFIG.clone()).expect("Failed to create connection pool");
     match pool {
-        InferPool::Cockroach(cockroach_pool) => cfg.app_data(cockroach_pool),
-        InferPool::Mysql(mysql_pool) => cfg.app_data(mysql_pool),
-        InferPool::Postgres(postgres_pool) => cfg.app_data(postgres_pool),
-        InferPool::Sqlite(sqlite_pool) => cfg.app_data(sqlite_pool),
+        InferPool::Cockroach(cockroach_pool) => cfg.app_data(Data::new(cockroach_pool)),
+        InferPool::Mysql(mysql_pool) => cfg.app_data(Data::new(mysql_pool)),
+        InferPool::Postgres(postgres_pool) => cfg.app_data(Data::new(postgres_pool)),
+        InferPool::Sqlite(sqlite_pool) => cfg.app_data(Data::new(sqlite_pool)),
     };
 }

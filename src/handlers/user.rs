@@ -5,6 +5,7 @@ use crate::models::user::{create, delete, find, get_all, update, NewUser, Update
 use crate::validate::validate;
 use actix_web::{HttpResponse, web};
 use actix_web::web::{block, Data, Json, Path};
+use log::info;
 use rayon::prelude::*;
 use serde::Serialize;
 use uuid::Uuid;
@@ -68,7 +69,9 @@ pub async fn get_user(
     user_id: Path<Uuid>,
     pool: Data<PoolType>,
 ) -> Result<Json<UserResponse>, ApiError> {
+    info!("user id:{}", user_id);
     let user = block(move || find(&pool, *user_id)).await??;
+    // Ok(Json(user))
     respond_json(user)
 }
 
