@@ -1,7 +1,7 @@
 use actix_web::{
     error::{BlockingError, ResponseError},
     http::StatusCode,
-    HttpResponse,
+    HttpResponse, Error,
 };
 use derive_more::Display;
 use diesel::{
@@ -106,5 +106,11 @@ impl From<ParseError> for ApiError {
 impl From<BlockingError> for ApiError {
     fn from(error: BlockingError) -> ApiError {
         ApiError::InternalServerError(error.to_string())
+    }
+}
+
+impl From<Error> for ApiError{
+    fn from(value: Error) -> Self {
+        ApiError::InternalServerError(value.to_string())
     }
 }
