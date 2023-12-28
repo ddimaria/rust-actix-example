@@ -1,5 +1,5 @@
 //! Database-related functions
-use crate::config::Config;
+use crate::config::{Config, CONFIG};
 use actix_web::web::{self, Data};
 use diesel::{
     mysql::MysqlConnection,
