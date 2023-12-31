@@ -6,9 +6,11 @@ use crate::config::CONFIG;
 use crate::database::add_pool;
 use crate::routes::routes;
 use crate::state::new_state;
+use actix_cors::Cors;
 use actix_identity::IdentityMiddleware;
 use actix_session::{config::PersistentSession, SessionMiddleware, storage::CookieSessionStore};
 use actix_web::cookie::time::Duration;
+use actix_web::http::header;
 use actix_web::{middleware::{self}, App, HttpServer, cookie::Key};
 use listenfd::ListenFd;
 
@@ -26,7 +28,14 @@ pub async fn server() -> std::io::Result<()> {
         App::new()
             .app_data(data.clone())
             .configure(add_cache)
-            // .wrap(Cors::new().supports_credentials().finish())
+            .wrap(
+                Cors::default()
+                    .allowed_origin(&CONFIG.server)
+                    .allowed_methods(vec!["GET", "POST"])
+                    .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
+                    .allowed_header(header::CONTENT_TYPE)
+                    .supports_credentials()
+                    .max_age(3600))
             // Identity management
             .wrap(IdentityMiddleware::default())
             // Session
