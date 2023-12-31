@@ -1,14 +1,14 @@
 use actix_web::{
     error::{BlockingError, ResponseError},
     http::StatusCode,
-    HttpResponse,
+    HttpResponse, Error,
 };
 use derive_more::Display;
 use diesel::{
     r2d2::PoolError,
     result::{DatabaseErrorKind, Error as DBError},
 };
-use uuid::parser::ParseError;
+use uuid::Error as ParseError;
 
 #[derive(Debug, Display, PartialEq)]
 #[allow(dead_code)]
@@ -38,16 +38,16 @@ impl ResponseError for ApiError {
     fn error_response(&self) -> HttpResponse {
         match self {
             ApiError::BadRequest(error) => {
-                HttpResponse::BadRequest().json::<ErrorResponse>(error.into())
+                HttpResponse::BadRequest().json(error)
             }
             ApiError::NotFound(message) => {
-                HttpResponse::NotFound().json::<ErrorResponse>(message.into())
+                HttpResponse::NotFound().json(message)
             }
             ApiError::ValidationError(errors) => {
-                HttpResponse::UnprocessableEntity().json::<ErrorResponse>(errors.to_vec().into())
+                HttpResponse::UnprocessableEntity().json(errors.to_vec())
             }
             ApiError::Unauthorized(error) => {
-                HttpResponse::Unauthorized().json::<ErrorResponse>(error.into())
+                HttpResponse::Unauthorized().json(error)
             }
             _ => HttpResponse::new(StatusCode::INTERNAL_SERVER_ERROR),
         }
@@ -102,12 +102,15 @@ impl From<ParseError> for ApiError {
     }
 }
 
-/// Convert Thread BlockingErrors to ApiErrors
-impl From<BlockingError<ApiError>> for ApiError {
-    fn from(error: BlockingError<ApiError>) -> ApiError {
-        match error {
-            BlockingError::Error(api_error) => api_error,
-            BlockingError::Canceled => ApiError::BlockingError("Thread blocking error".into()),
-        }
+// / Convert Thread BlockingErrors to ApiErrors
+impl From<BlockingError> for ApiError {
+    fn from(error: BlockingError) -> ApiError {
+        ApiError::InternalServerError(error.to_string())
+    }
+}
+
+impl From<Error> for ApiError{
+    fn from(value: Error) -> Self {
+        ApiError::InternalServerError(value.to_string())
     }
 }

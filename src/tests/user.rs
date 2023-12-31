@@ -3,14 +3,17 @@ mod tests {
     use crate::handlers::user::{tests::get_first_users_id, CreateUserRequest};
     use crate::tests::helpers::tests::{assert_get, assert_post};
     use actix_web::web::Path;
+    use log::info;
     use uuid::Uuid;
 
     const PATH: &str = "/api/v1/user";
 
     #[actix_rt::test]
     async fn it_gets_a_user() {
+        env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
         let user_id: Path<Uuid> = get_first_users_id().into();
         let url = format!("{}/{}", PATH, user_id);
+        info!("url:{}", url);
         assert_get(&url).await;
     }
 

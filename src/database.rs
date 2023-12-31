@@ -1,6 +1,6 @@
 //! Database-related functions
 use crate::config::{Config, CONFIG};
-use actix_web::web;
+use actix_web::web::{self, Data};
 use diesel::{
     mysql::MysqlConnection,
     pg::PgConnection,
@@ -8,8 +8,8 @@ use diesel::{
     sqlite::SqliteConnection,
     Connection,
 };
+use log::info;
 
-#[serde(untagged)]
 #[derive(Clone, Deserialize, Debug, PartialEq)]
 #[serde(field_identifier, rename_all = "lowercase")]
 pub enum DatabaseConnection {
@@ -27,15 +27,23 @@ pub type SqlitePool = Pool<SqliteConnection>;
 
 #[cfg(feature = "cockraoch")]
 pub type PoolType = CockroachPool;
+#[cfg(feature = "cockraoch")]
+pub type ConnectionType = PgConnection;
 
 #[cfg(feature = "mysql")]
 pub type PoolType = MysqlPool;
+#[cfg(feature = "mysql")]
+pub type ConnectionType = MysqlConnection;
 
 #[cfg(feature = "postgres")]
 pub type PoolType = PostgresPool;
+#[cfg(feature = "postgres")]
+pub type ConnectionType = PgConnection;
 
 #[cfg(feature = "sqlite")]
 pub type PoolType = SqlitePool;
+#[cfg(feature = "sqlite")]
+pub type ConnectionType = SqliteConnection;
 
 #[derive(Clone)]
 pub enum InferPool {
@@ -65,18 +73,19 @@ impl InferPool {
 
 pub fn init_pool<T>(config: Config) -> Result<Pool<T>, PoolError>
 where
-    T: Connection + 'static,
+    T: Connection + 'static + diesel::r2d2::R2D2Connection,
 {
     let manager = ConnectionManager::<T>::new(config.database_url);
     Pool::builder().build(manager)
 }
 
 pub fn add_pool(cfg: &mut web::ServiceConfig) {
+    info!("config database pool");
     let pool = InferPool::init_pool(CONFIG.clone()).expect("Failed to create connection pool");
     match pool {
-        InferPool::Cockroach(cockroach_pool) => cfg.data(cockroach_pool),
-        InferPool::Mysql(mysql_pool) => cfg.data(mysql_pool),
-        InferPool::Postgres(postgres_pool) => cfg.data(postgres_pool),
-        InferPool::Sqlite(sqlite_pool) => cfg.data(sqlite_pool),
+        InferPool::Cockroach(cockroach_pool) => cfg.app_data(Data::new(cockroach_pool)),
+        InferPool::Mysql(mysql_pool) => cfg.app_data(Data::new(mysql_pool)),
+        InferPool::Postgres(postgres_pool) => cfg.app_data(Data::new(postgres_pool)),
+        InferPool::Sqlite(sqlite_pool) => cfg.app_data(Data::new(sqlite_pool)),
     };
 }

@@ -1,4 +1,3 @@
-#[macro_use]
 extern crate diesel;
 #[macro_use]
 extern crate lazy_static;
@@ -16,7 +15,7 @@ mod cache;
 mod config;
 mod database;
 mod errors;
-mod extractors;
+// mod extractors;
 pub mod handlers;
 mod helpers;
 mod middleware;
@@ -27,6 +26,7 @@ mod server;
 mod state;
 mod tests;
 mod validate;
+mod utils;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
