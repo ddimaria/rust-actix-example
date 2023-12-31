@@ -27,15 +27,23 @@ pub type SqlitePool = Pool<SqliteConnection>;
 
 #[cfg(feature = "cockraoch")]
 pub type PoolType = CockroachPool;
+#[cfg(feature = "cockraoch")]
+pub type ConnectionType = PgConnection;
 
 #[cfg(feature = "mysql")]
 pub type PoolType = MysqlPool;
+#[cfg(feature = "mysql")]
+pub type ConnectionType = MysqlConnection;
 
 #[cfg(feature = "postgres")]
 pub type PoolType = PostgresPool;
+#[cfg(feature = "postgres")]
+pub type ConnectionType = PgConnection;
 
 #[cfg(feature = "sqlite")]
 pub type PoolType = SqlitePool;
+#[cfg(feature = "sqlite")]
+pub type ConnectionType = SqliteConnection;
 
 #[derive(Clone)]
 pub enum InferPool {

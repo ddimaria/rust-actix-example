@@ -2,7 +2,7 @@
 pub mod tests {
     use crate::cache::add_cache;
     use crate::config::CONFIG;
-    use crate::database::{add_pool, init_pool, Pool};
+    use crate::database::{add_pool, init_pool, Pool, ConnectionType};
     use crate::handlers::auth::LoginRequest;
     use crate::routes::routes;
     use crate::state::{new_state, AppState};
@@ -117,14 +117,15 @@ pub mod tests {
     }
 
     /// Returns a r2d2 Pooled Connection to be used in tests
-    pub fn get_pool() -> Pool<MysqlConnection> {
-        init_pool::<MysqlConnection>(CONFIG.clone()).unwrap()
+    pub fn get_pool() -> Pool<ConnectionType> {
+        init_pool::<ConnectionType>(CONFIG.clone()).unwrap()
     }
 
     /// Returns a r2d2 Pooled Connection wrappedn in Actix Application Data
-    pub fn get_data_pool() -> Data<Pool<MysqlConnection>> {
+    pub fn get_data_pool() -> Data<Pool<ConnectionType>> {
         Data::new(get_pool())
     }
+
 
     /// Login to routes  
     pub async fn login() -> ServiceResponse {
